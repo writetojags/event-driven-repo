@@ -119,14 +119,16 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           
+      - name: Install Cloud Foundry CLI
+        run: |
+            wget -q -O cf-cli.tgz https://packages.cloudfoundry.org/stable?release=linux64
+            tar -xzf cf-cli.tgz
+            sudo mv cf /usr/local/bin
+
       - name: Deploy to PCF
         run: |
-            curl -L "https://cli.run.pivotal.io/stable?release=linux64-binary&source=github"
-            | tar -zx
-            ./cf login -a ${{ secrets.PCF_API }} -u ${{ secrets.PCF_USERNAME }} -p ${{ secrets.PCF_PASSWORD }} -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
-            ./cf push ${{ secrets.PCF_APP_NAME }} -f manifest.yml
-        env:
-          CF_HOME: /tmp/cfhome
+            cf login -a ${{ secrets.PCF_API }} -u ${{ secrets.PCF_USERNAME }} -p ${{ secrets.PCF_PASSWORD }} -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
+            cf push ${{ secrets.PCF_APP_NAME }} -f manifest-qa.yml
 
 
       - name: Slack Notification - Failure
