@@ -10,12 +10,17 @@
   <version>1.0-SNAPSHOT</version>
   <properties>
     <java.version>17</java.version>
-    <spring.boot.version>3.2.4</spring.boot.version>
+    <spring.boot.version>3.2.6</spring.boot.version>
   </properties>
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
+      <version>${spring.boot.version}</version>
+    </dependency>
+	<dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
       <version>${spring.boot.version}</version>
     </dependency>
     <dependency>
@@ -30,11 +35,13 @@
       <version>5.11.0</version>
       <scope>test</scope>
     </dependency>
-     <dependency>
-     	<groupId>com.example</groupId>
-     	<artifactId>ci-cd-demo</artifactId>
-     	<version>1.0.0</version>
-     </dependency>
+   <!--
+	<dependency>
+     <groupId>com.example</groupId>
+     <artifactId>ci-cd-demo</artifactId>
+     <version>1.0.0</version>
+   </dependency>
+   -->
   </dependencies>
   <build>
     <plugins>

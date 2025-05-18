@@ -3,19 +3,21 @@ name: PR Review to QA
 on:
   pull_request:
     branches:
-      - '*'
+      - '**'
 
 jobs:
   validate-pr:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set up Java
+        id: setup-java
         uses: actions/setup-java@v4
         with:
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Build and Run Tests
@@ -25,23 +27,88 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         with:
           args: >
-            -Dsonar.projectKey=your-org_event-driven-service
-            -Dsonar.organization=your-org
+            -Dsonar.projectKey=writetojags_event-driven-repo
+            -Dsonar.organization=writetojags
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.java.binaries=target
+            
+      - name: Make Maven Wrapper for Maven
+        run: chmod +x ./mvnw
+        
+      - name: Install Snyk CLI
+        run: npm install -g snyk
 
-      - name: OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'EventDrivenService'
-          format: 'HTML'
-          out: reports
+      - name: Run Snyk CLI for Maven
+        run: snyk test --file=pom.xml --severity-threshold=medium
+            #mvn dependency:tree -DoutputType=dot -batch-mode -DoutputFile=dependency-graph.dot
+            
+        continue-on-error: true
+        working-directory: .
+        env:
+            JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        
+            
+            
+     # - name: Install Snyk CLI     
+      #  run: npm install -g snyk
+        
+      #- name: Run Snyk CLI for Maven
+       # run: |
+            #mvn dependency:tree -DoutputType=dot -batch-mode -DoutputFile=dependency-graph.dot
+        #    snyk test --file=pom.xml --severity-threshold=medium
+        #env:
+            #JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+         #   SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+
+            
+     # - name: Install Snyk CLI      
+      #  run: npm instal -g snyk   
+        
+      #- name: Run Snyk CLI for Maven
+       # run: snyk test --file=pom.xml --severity-threshold=medium
+        #working-directory: .
+        #env:
+            #JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+         #   SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+            
+            
+       # uses: snyk/actions/maven@master
+        #with:
+         # orgs: test --file=pom.xml --severity-threshold=medium
+       # env:
+            #JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+        #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+         #   working-directory: ./
+            
+            
+     # - name: Install and Run Snyk CLI for Maven
+      #  uses: snyk/actions/maven@master
+       # with:
+        #   orgs: test --severity-threshold=medium
+        #env:
+         #   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+          #  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+           # working-directory: .
+       # run: |
+        #    npm instal -g snyk
+         #   snyk test --all-projects --detection-depth=4 --severity-threshold=medium --exclude=target
+        #working-directory: .  # <-- update to your actual subdir if needed
+        #env:
+         #   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+          #  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+
+
+       
 
       - name: Upload Vulnerability Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: vulnerability-report
-          path: reports
+          path: ./reports
 
       - name: Slack Notification - Success
         if: success()
