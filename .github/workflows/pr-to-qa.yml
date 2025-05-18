@@ -119,14 +119,15 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           
-      - name: Deploy to PCF QA
+      - name: Deploy to PCF
         run: |
-            cf api ${{ secrets.PCF_API }} --skip-ssl-validation
-            cf auth ${{ secrets.PCF_USERNAME }} ${{ secrets.PCF_PASSWORD }}
-            cf target -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
-            cf push event-driven-service -f manifest-qa.yml
+            curl -L "https://cli.run.pivotal.io/stable?release=linux64-binary&source=github"
+            | tar -zx
+            ./cf login -a ${{ secrets.PCF_API }} -u ${{ secrets.PCF_USERNAME }} -p ${{ secrets.PCF_PASSWORD }} -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
+            ./cf push ${{ secrets.PCF_APP_NAME }} -f manifest.yml
         env:
-        CF_HOME: ${{ github.workspace }}
+          CF_HOME: /tmp/cfhome
+
 
       - name: Slack Notification - Failure
         if: failure()
