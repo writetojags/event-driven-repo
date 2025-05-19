@@ -122,10 +122,11 @@ jobs:
        
       - name: Install Cloud Foundry CLI
         run: |
-            curl -fsSL https://packages.cloudfoundry.org/install -o cf-install.sh
-            chmod +x cf-install.sh
-            ./cf-install.sh || cat cf-install.sh
-        shell: bash
+            wget -q https://packages.cloudfoundry.org/stable?release=linux64-binary -O cf-cli.tgz
+            mkdir -p $HOME/cf-cli
+            tar -xzf cf-cli.tgz -C $HOME/cf-cli
+            sudo mv $HOME/cf-cli/cf /usr/local/bin
+
 
 
 
