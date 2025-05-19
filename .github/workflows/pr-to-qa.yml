@@ -125,7 +125,10 @@ jobs:
             wget -q https://packages.cloudfoundry.org/stable?release=linux64-binary -O cf-cli.tgz
             mkdir -p $HOME/cf-cli
             tar -xzf cf-cli.tgz -C $HOME/cf-cli
-            sudo mv $HOME/cf-cli/cf /usr/local/bin
+            sudo mv $HOME/cf-cli/cf /usr/local/bin/
+            cf --version
+        shell: /usr/bin/bash -e {0}
+
 
 
 
