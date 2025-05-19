@@ -120,26 +120,48 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
        
        
-      - name: Install Cloud Foundry CLI
+     # - name: Install Cloud Foundry CLI
+      #  run: |
+       #     wget -q https://packages.cloudfoundry.org/stable?release=linux64-binary -O cf-cli.tgz
+       #     mkdir -p $HOME/cf-cli
+       #     tar -xzf cf-cli.tgz -C $HOME/cf-cli
+        
+#        echo "$HOME/cf-cli" >> $GITHUB_PATH
+ #           $HOME/cf-cli/cf --version
+  #      shell: bash
+
+
+   #   - name: Deploy to PCF
+    #    run: |
+     #       echo "Using PCF_API: ${{ secrets.PCF_API }}"
+      #      API_HOST=$(echo "${{ secrets.PCF_API }}" | sed -E 's~https?://~~' | cut -d/ -f1)
+       #     echo "Resolved Host: $API_HOST"
+        #    nslookup "$API_HOST"
+
+         #   cf login -a ${{ secrets.PCF_API }} -u ${{ secrets.PCF_USERNAME }} -p ${{ secrets.PCF_PASSWORD }} -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
+          #          cf push ${{ secrets.PCF_APP_NAME }} -f manifest-qa.yml
+        #shell: bash
+        
+        
+      - name: Install Cloud Foundry CLI (Mock for Local)
         run: |
-            wget -q https://packages.cloudfoundry.org/stable?release=linux64-binary -O cf-cli.tgz
-            mkdir -p $HOME/cf-cli
-            tar -xzf cf-cli.tgz -C $HOME/cf-cli
-            echo "$HOME/cf-cli" >> $GITHUB_PATH
-            $HOME/cf-cli/cf --version
+            echo -e '#!/bin/bash\necho Simulated cf command: $@' > /usr/local/bin/cf
+            chmod +x /usr/local/bin/cf
         shell: bash
+        env:
+          JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+          JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
 
-
-      - name: Deploy to PCF
+      - name: Deploy to PCF (Simulated)
         run: |
-            echo "Using PCF_API: ${{ secrets.PCF_API }}"
-            API_HOST=$(echo "${{ secrets.PCF_API }}" | sed -E 's~https?://~~' | cut -d/ -f1)
-            echo "Resolved Host: $API_HOST"
-            nslookup "$API_HOST"
-
+            echo "Deploying to mocked PCF: ${{ secrets.PCF_API }}"
             cf login -a ${{ secrets.PCF_API }} -u ${{ secrets.PCF_USERNAME }} -p ${{ secrets.PCF_PASSWORD }} -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
             cf push ${{ secrets.PCF_APP_NAME }} -f manifest-qa.yml
         shell: bash
+        env:
+          JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+          JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+
 
 
 
