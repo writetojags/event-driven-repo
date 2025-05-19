@@ -121,9 +121,10 @@ jobs:
           
       - name: Install Cloud Foundry CLI
         run: |
-            wget -q -O cf-cli.tgz https://packages.cloudfoundry.org/stable?release=linux64
+            curl -L "https://packages.cloudfoundry.org/stable?release=linux64&source=github-action" -o cf-cli.tgz
             tar -xzf cf-cli.tgz
             sudo mv cf /usr/local/bin
+
 
       - name: Deploy to PCF
         run: |
