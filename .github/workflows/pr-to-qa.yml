@@ -122,9 +122,11 @@ jobs:
        
       - name: Install Cloud Foundry CLI
         run: |
-            curl -fsSL "https://packages.cloudfoundry.org/install -o cf-install.sh"
+            curl -fsSL https://packages.cloudfoundry.org/install -o cf-install.sh
             chmod +x cf-install.sh
             ./cf-install.sh || cat cf-install.sh
+        shell: bash
+
 
 
       - name: Deploy to PCF
