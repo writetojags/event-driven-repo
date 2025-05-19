@@ -130,17 +130,17 @@ jobs:
         shell: bash
 
 
-
-
-
-
       - name: Deploy to PCF
         run: |
             echo "Using PCF_API: ${{ secrets.PCF_API }}"
-            nslookup $(echo "${{ secrets.PCF_API }}" | sed -E 's~https?://~~' | cut -d/ -f1
+            API_HOST=$(echo "${{ secrets.PCF_API }}" | sed -E 's~https?://~~' | cut -d/ -f1)
+            echo "Resolved Host: $API_HOST"
+            nslookup "$API_HOST"
 
             cf login -a ${{ secrets.PCF_API }} -u ${{ secrets.PCF_USERNAME }} -p ${{ secrets.PCF_PASSWORD }} -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
             cf push ${{ secrets.PCF_APP_NAME }} -f manifest-qa.yml
+        shell: bash
+
 
 
       - name: Slack Notification - Failure
