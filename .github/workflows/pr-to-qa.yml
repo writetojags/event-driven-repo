@@ -121,9 +121,9 @@ jobs:
           
       - name: Install Cloud Foundry CLI
         run: |
-            curl -L -o cf-cli.tgz https://packages.cloudfoundry.org/stable/cloudfoundry-cli.tgz
-            tar -xzf cf-cli.tgz
-            sudo mv cf /usr/local/bin/
+            curl -L -o cf8.deb "https://packages.cloudfoundry.org/debian/pool/cf-cli-installer_8.0.0_linux_x86_64.deb"
+            sudo dpkg -i cf8.deb
+
 
 
 
