@@ -118,13 +118,12 @@ jobs:
           fields: repo,message,commit,author
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          
+       
+       
       - name: Install Cloud Foundry CLI
         run: |
-            curl -s "https://packages.cloudfoundry.org/install | bash"
+            curl -fsSL "https://packages.cloudfoundry.org/install | bash"
         shell: bash
-
-
 
 
       - name: Deploy to PCF
