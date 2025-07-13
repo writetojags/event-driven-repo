@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.microservice.service.OrderService;
 
-/* Jags created  
+/* Controller class  
  * 
  * */
 @RestController
