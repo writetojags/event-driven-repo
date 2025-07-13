@@ -44,6 +44,7 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-client</artifactId>
+      <version>5.18.4</version>
     </dependency>
 
     <dependency>
