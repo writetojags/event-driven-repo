@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.microservice.service.OrderService;
 
-/* Controller class  
+/* Controller class for /api/orders 
  * 
  * */
 @RestController
