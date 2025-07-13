@@ -1,0 +1,176 @@
+name: PR Review to QA
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        id: setup-java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build and Run Tests
+        run: mvn clean verify
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.projectKey=writetojags_event-driven-repo
+            -Dsonar.organization=writetojags
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.java.binaries=target
+            
+      - name: Make Maven Wrapper for Maven
+        run: chmod +x ./mvnw
+        
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Run Snyk CLI for Maven
+        run: snyk test --file=pom.xml --severity-threshold=medium
+            #mvn dependency:tree -DoutputType=dot -batch-mode -DoutputFile=dependency-graph.dot
+            
+        continue-on-error: true
+        working-directory: .
+        env:
+            JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        
+            
+            
+     # - name: Install Snyk CLI     
+      #  run: npm install -g snyk
+        
+      #- name: Run Snyk CLI for Maven
+       # run: |
+            #mvn dependency:tree -DoutputType=dot -batch-mode -DoutputFile=dependency-graph.dot
+        #    snyk test --file=pom.xml --severity-threshold=medium
+        #env:
+            #JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+         #   SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+
+            
+     # - name: Install Snyk CLI      
+      #  run: npm instal -g snyk   
+        
+      #- name: Run Snyk CLI for Maven
+       # run: snyk test --file=pom.xml --severity-threshold=medium
+        #working-directory: .
+        #env:
+            #JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+         #   SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+            
+            
+       # uses: snyk/actions/maven@master
+        #with:
+         # orgs: test --file=pom.xml --severity-threshold=medium
+       # env:
+            #JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+        #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+         #   working-directory: ./
+            
+            
+     # - name: Install and Run Snyk CLI for Maven
+      #  uses: snyk/actions/maven@master
+       # with:
+        #   orgs: test --severity-threshold=medium
+        #env:
+         #   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+          #  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+           # working-directory: .
+       # run: |
+        #    npm instal -g snyk
+         #   snyk test --all-projects --detection-depth=4 --severity-threshold=medium --exclude=target
+        #working-directory: .  # <-- update to your actual subdir if needed
+        #env:
+         #   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+          #  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+
+
+       
+
+      - name: Upload Vulnerability Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerability-report
+          path: ./reports
+
+      - name: Slack Notification - Success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          fields: repo,message,commit,author
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+       
+       
+     # - name: Install Cloud Foundry CLI
+      #  run: |
+       #     wget -q https://packages.cloudfoundry.org/stable?release=linux64-binary -O cf-cli.tgz
+       #     mkdir -p $HOME/cf-cli
+       #     tar -xzf cf-cli.tgz -C $HOME/cf-cli
+        
+#        echo "$HOME/cf-cli" >> $GITHUB_PATH
+ #           $HOME/cf-cli/cf --version
+  #      shell: bash
+
+
+   #   - name: Deploy to PCF
+    #    run: |
+     #       echo "Using PCF_API: ${{ secrets.PCF_API }}"
+      #      API_HOST=$(echo "${{ secrets.PCF_API }}" | sed -E 's~https?://~~' | cut -d/ -f1)
+       #     echo "Resolved Host: $API_HOST"
+        #    nslookup "$API_HOST"
+
+         #   cf login -a ${{ secrets.PCF_API }} -u ${{ secrets.PCF_USERNAME }} -p ${{ secrets.PCF_PASSWORD }} -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
+          #          cf push ${{ secrets.PCF_APP_NAME }} -f manifest-qa.yml
+        #shell: bash
+        
+        
+      - name: Install Cloud Foundry CLI (Mock for Local)
+        run: |
+            echo -e '#!/bin/bash\necho Simulated cf command: $@' > /usr/local/bin/cf
+            chmod +x /usr/local/bin/cf
+        shell: bash
+        env:
+          JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+          JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+
+      - name: Deploy to PCF (Simulated)
+        run: |
+            echo "Deploying to mocked PCF: ${{ secrets.PCF_API }}"
+            cf login -a ${{ secrets.PCF_API }} -u ${{ secrets.PCF_USERNAME }} -p ${{ secrets.PCF_PASSWORD }} -o ${{ secrets.PCF_ORG }} -s ${{ secrets.PCF_SPACE }}
+            cf push ${{ secrets.PCF_APP_NAME }} -f manifest-qa.yml
+        shell: bash
+        env:
+          JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+          JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
+
+
+
+
+      - name: Slack Notification - Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: repo,message,commit,author
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
