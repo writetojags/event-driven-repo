@@ -14,7 +14,7 @@ public class ActuatorSecurityConfig {
         http
         	.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-            		.requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+            		.requestMatchers("/actuator/**").permitAll()
             		.requestMatchers("/api/orders/**").permitAll()
             		.anyRequest().authenticated()
             )
