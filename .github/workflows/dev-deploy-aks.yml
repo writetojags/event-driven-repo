@@ -1,0 +1,97 @@
+name: Maven CI with AKS Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - uses: actions/checkout@v3
+
+      # Setup JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      # Code formatting
+      - name: Check code formatting with Spotless
+        run: mvn spotless:check
+
+      # Unit tests
+      - name: Run Tests with Jacoco
+        run: mvn test
+
+      # Build
+      - name: Build and Test with Maven
+        run: mvn clean verify
+
+      # SonarCloud Analysis
+      - name: Analyze with SonarCloud
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.organization=writetojags
+            -Dsonar.projectKey=writetojags_tolerant-reader-service
+            -Dsonar.java.binaries=target/classes
+            -Dsonar.branch.name=main
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Install & authenticate Snyk
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth $SNYK_TOKEN
+
+      - name: Run Snyk Scan
+        run: snyk test --all-projects
+
+      # Azure Login
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Set AKS Context
+      - name: Set AKS context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: aks-one-click-demo
+          cluster-name: jagsaksdemo
+
+      # Deploy to AKS using kubectl
+      - name: Deploy to AKS
+        run: kubectl apply -f k8s/deployment.yaml
+
+      # Health check
+      - name: Health Check
+        run: |
+          curl --fail http://localhost:8080/actuator/health
+
+      # Optional Rollback on Health Check Failure
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Rolling back..."
+          kubectl rollout undo deployment event-driven-repo
