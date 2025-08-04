@@ -1,12 +1,12 @@
-name: Maven CI with AKS Deploy
+name: AKS Deployment with Health Check and Rollback
 
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build-and-deploy:
@@ -77,21 +77,57 @@ jobs:
       - name: Set AKS context
         uses: azure/aks-set-context@v3
         with:
-          resource-group: aks-one-click-demo
-          cluster-name: jagsaksdemo
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+
+          
+      # Install kubectl
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
 
       # Deploy to AKS using kubectl
       - name: Deploy to AKS
-        run: kubectl apply -f k8s/deployment.yaml
+        run: |
+         kubectl apply -f k8s/deployment.yaml
+         kubectl rollout status deployment event-driven-repo --timeout=60s
+         
+      - name: Wait for External IP
+        id: get-ip
+        run: |
+          for i in $(seq 1 ${{ env.RETRIES }}); do
+            IP=$(kubectl get svc ${{ env.SERVICE_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [[ -n "$IP" ]]; then
+              echo "External IP acquired: $IP"
+              echo "SERVICE_IP=$IP" >> $GITHUB_OUTPUT
+              break
+            fi
+            echo "Waiting for external IP..."
+            sleep ${{ env.DELAY }}
+          done
+          if [[ -z "$IP" ]]; then
+            echo "External IP not available after retries"
+            exit 1
+          fi
+
 
       # Health check
       - name: Health Check
         run: |
-          curl --fail http://localhost:8080/actuator/health
+          echo "Checking health at http://${{ steps.get-ip.outputs.SERVICE_IP }}${{ env.HEALTH_ENDPOINT }}"
+          status_code=$(curl -s -o /dev/null -w "%{http_code}" http://${{ steps.get-ip.outputs.SERVICE_IP }}${{ env.HEALTH_ENDPOINT }})
+          echo "HTTP Status: $status_code"
+          if [[ "$status_code" != "200" ]]; then
+            echo "Health check failed!"
+            exit 1
+          fi
+
 
       # Optional Rollback on Health Check Failure
       - name: Rollback on failure
         if: failure()
         run: |
-          echo "Rolling back..."
+          echo "Rolling back triggered..."
           kubectl rollout undo deployment event-driven-repo
