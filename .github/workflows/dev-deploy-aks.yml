@@ -105,12 +105,12 @@ jobs:
          fi
          echo "Waiting for external IP..."
          sleep ${{ env.DELAY }}
-        done
-        if [[ -z "$IP" ]]; then
+         done
+         if [[ -z "$IP" ]]; then
           echo "External IP not available after retries"
           exit 1
-        fi
-       shell: bash
+         fi
+        shell: bash
 
 
 
