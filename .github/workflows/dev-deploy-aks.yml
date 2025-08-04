@@ -87,7 +87,6 @@ jobs:
         with:
           version: 'latest'
 
-
       # Deploy to AKS using kubectl
       - name: Deploy to AKS
         run: |
