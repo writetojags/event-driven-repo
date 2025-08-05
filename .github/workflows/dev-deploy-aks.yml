@@ -1,5 +1,5 @@
+---
 name: AKS Deployment with Health Check and Rollback
-
 on:
   push:
     branches:
@@ -7,35 +7,23 @@ on:
   pull_request:
     branches:
       - master
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout code
-      - uses: actions/checkout@v3
-
-      # Setup JDK 17
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: "17"
           distribution: temurin
-
-      # Code formatting
       - name: Check code formatting with Spotless
         run: mvn spotless:check
-
-      # Unit tests
       - name: Run Tests with Jacoco
         run: mvn test
-
-      # Build
       - name: Build and Test with Maven
         run: mvn clean verify
-
-      # SonarCloud Analysis
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@v2
         with:
@@ -43,91 +31,76 @@ jobs:
           args: >
             -Dsonar.organization=writetojags
             -Dsonar.projectKey=writetojags_tolerant-reader-service
-            -Dsonar.java.binaries=target/classes
-            -Dsonar.branch.name=main
+            -Dsonar.java.binaries=target/classes -Dsonar.branch.name=main
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      # Install & authenticate Snyk
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
-
+          node-version: "20"
       - name: Install Snyk CLI
         run: npm install -g snyk
-
       - name: Authenticate Snyk
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk auth $SNYK_TOKEN
-
       - name: Run Snyk Scan
         run: snyk test --all-projects
-
-      # Azure Login
       - name: Azure Login
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      # Set AKS Context
       - name: Set AKS context
         uses: azure/aks-set-context@v3
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: ${{ env.CLUSTER_NAME }}
-
-          
-      # Install kubectl
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
         with:
-          version: 'latest'
+          version: latest
+      - name: Deploy to AKS
+        run: >
+          kubectl apply -f k8s/deployment-service-aks.yml
 
-
-      # Deploy to AKS using kubectl
-	  - name: Deploy to AKS
-	    run: |
-	      kubectl apply -f k8s/deployment-service-aks.yml
-	      kubectl rollout status deployment event-driven-repo -n ${{ env.NAMESPACE }} --timeout=60s
-         
+          kubectl rollout status deployment event-driven-repo -n ${{ env.NAMESPACE }} --timeout=60s
       - name: Wait for External IP
         id: get-ip
-        run: |
-         for i in $(seq 1 ${{ env.RETRIES }}); do
-         IP=$(kubectl get svc ${{ env.SERVICE_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-		 if [[ "$IP" ]]; then
-		  echo "External IP acquired: $IP"
-		  echo "SERVICE_IP=$IP" >> $GITHUB_OUTPUT
-		  break
-		 fi
+        run: >
+          for i in $(seq 1 ${{ env.RETRIES }}); do
 
-         echo "Waiting for external IP..."
-         sleep ${{ env.DELAY }}
-        done
-        if [[ -z "$IP" ]]; then
-          echo "External IP not available after retries"
-          exit 1
-        fi
+          IP=$(kubectl get svc ${{ env.SERVICE_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-      # Health check
+          if [[ "$IP" ]]; then
+           echo "External IP acquired: $IP"
+           echo "SERVICE_IP=$IP" >> $GITHUB_OUTPUT
+           break
+          fi
+           echo "Waiting for external IP..."
+           sleep ${{ env.DELAY }}
+           done
+          if [[ -z "$IP" ]]; then
+           echo "External IP not available after retries"
+           exit 1
+          fi
       - name: Health Check
-        run: |
-          echo "Checking health at http://${{ steps.get-ip.outputs.SERVICE_IP }}${{ env.HEALTH_ENDPOINT }}"
+        run: >
+          echo "Checking health at http://${{ steps.get-ip.outputs.SERVICE_IP }}${{
+          env.HEALTH_ENDPOINT }}"
+
           status_code=$(curl -s -o /dev/null -w "%{http_code}" http://${{ steps.get-ip.outputs.SERVICE_IP }}${{ env.HEALTH_ENDPOINT }})
+
           echo "HTTP Status: $status_code"
+
           if [[ "$status_code" != "200" ]]; then
            echo "Health check failed with status $STATUS"
            exit 1
           fi
-
-
-      # Optional Rollback on Health Check Failure
       - name: Rollback on failure
         if: failure()
-        run: |
+        run: >
           echo "Rolling back triggered..."
+
           kubectl rollout undo deployment event-driven-repo -n ${{ env.NAMESPACE }}
