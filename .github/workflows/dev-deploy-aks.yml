@@ -87,7 +87,6 @@ jobs:
         with:
           version: 'latest'
 
-
       # Deploy to AKS using kubectl
 	  - name: Deploy to AKS
 	    run: |
@@ -107,11 +106,11 @@ jobs:
 
          echo "Waiting for external IP..."
          sleep ${{ env.DELAY }}
-        done
-        if [[ -z "$IP" ]]; then
+         done
+         if [[ -z "$IP" ]]; then
           echo "External IP not available after retries"
           exit 1
-        fi
+     fi
 
       # Health check
       - name: Health Check
