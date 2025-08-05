@@ -38,6 +38,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "20"
+      - name: List project directory
+        run: ls -R
       - name: Install Snyk CLI
         run: npm install -g snyk
       - name: Authenticate Snyk
