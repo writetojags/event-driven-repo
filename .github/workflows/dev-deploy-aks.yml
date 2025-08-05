@@ -1,4 +1,4 @@
----
+
 name: AKS Deployment with Health Check and Rollback
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           args: >
             -Dsonar.organization=writetojags
             -Dsonar.projectKey=writetojags_tolerant-reader-service
-            -Dsonar.java.binaries=target/classes -Dsonar.branch.name=main
+            -Dsonar.java.binaries=target/classes -Dsonar.branch.name=master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Set up Node.js
