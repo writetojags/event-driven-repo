@@ -1,4 +1,3 @@
-
 name: AKS Deployment with Health Check and Rollback
 on:
   push:
