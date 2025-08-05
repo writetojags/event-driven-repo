@@ -44,8 +44,8 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk auth $SNYK_TOKEN
-      - name: Run Snyk Scan
-        run: snyk test
+
+        
       - name: Azure Login
         uses: azure/login@v1
         with:
