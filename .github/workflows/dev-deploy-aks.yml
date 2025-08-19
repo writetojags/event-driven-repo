@@ -69,7 +69,7 @@ jobs:
           version: latest
       - name: Deploy to AKS
         run: >
-          kubectl apply -f k8s/deployment-service-aks.yml
+          kubectl apply -f .github/k8s/deployment-service-aks.yml
 
           kubectl rollout status deployment event-driven-repo -n ${{ env.NAMESPACE }} --timeout=60s
       - name: Wait for External IP
