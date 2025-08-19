@@ -41,7 +41,6 @@ spec:
             runAsNonRoot: true
             readOnlyRootFilesystem: true
 
----
 
 apiVersion: v1
 kind: Service
