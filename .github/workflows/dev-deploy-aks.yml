@@ -81,7 +81,7 @@ jobs:
           kubectl apply -f .github/k8s/deployment-service-aks.yml
       - name: Debug Deployment Sataus
         run: |
-          echo "Describing deployment and listing resources.
+          echo "Describing deployment and listing resources..."
           kubectl describe deployment event-driven-repo -n ${{ env.NAMESPACE }} || echo "Deployment not found"
           kubectl get all -n ${{ env.NAMESPACE }}
           
