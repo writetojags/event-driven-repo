@@ -13,6 +13,12 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     environment: dev
+    env:
+      NAMESPACE: event-driven-repo
+      SERVICE_NAME: event-driven-repo
+      RETRIES: 10
+      DELAY: 10
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
