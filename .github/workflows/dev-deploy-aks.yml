@@ -67,6 +67,9 @@ jobs:
         uses: azure/setup-kubectl@v3
         with:
           version: latest
+      - name: Create namespace if not exists
+        run: |
+          kubectl get namespace event-driven-repo || kubectl create namespace event-driven-repo
       - name: Deploy to AKS
         run: >
           kubectl apply -f .github/k8s/deployment-service-aks.yml
