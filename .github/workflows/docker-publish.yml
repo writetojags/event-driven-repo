@@ -26,6 +26,11 @@ jobs:
       - name: Build with Maven
         run: mvn clean package --no-transfer-progress --batch-mode
 
+      - name: Rename jar to app.jar
+        run: |
+          mkdir -p target
+          cp target/*.jar target/app.jar
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
