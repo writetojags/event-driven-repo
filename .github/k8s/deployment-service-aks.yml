@@ -13,6 +13,7 @@ spec:
       labels:
         app: event-driven-repo
     spec:
+      serviceAccountName: default
       containers:
       - name: event-driven-repo-container
         image: ghcr.io/writetojags/event-driven-repo:latest
