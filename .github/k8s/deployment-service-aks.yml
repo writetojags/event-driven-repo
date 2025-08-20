@@ -16,8 +16,7 @@ spec:
       containers:
         - name: event-driven-repo-container
           image: ghcr.io/writetojags/event-driven-repo:latest
-      imagePullSecrets:
-        - name: ghcr-secret
+
           ports:
             - containerPort: 8080
           livenessProbe:
@@ -42,6 +41,8 @@ spec:
           securityContext:
             runAsNonRoot: true
             readOnlyRootFilesystem: true
+      imagePullSecrets:
+        - name: ghcr-secret      
 
 ---
 
