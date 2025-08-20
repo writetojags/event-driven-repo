@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+apiVersion: apps/v1 
 kind: Deployment
 metadata:
   name: event-driven-repo
@@ -14,35 +14,31 @@ spec:
         app: event-driven-repo
     spec:
       containers:
-        - name: event-driven-repo-container
-          image: ghcr.io/writetojags/event-driven-repo:latest
-
-          ports:
-            - containerPort: 8080
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
-          resources:
-            requests:
-              cpu: "250m"
-              memory: "512Mi"
-            limits:
-              cpu: "500m"
-              memory: "1Gi"
-          securityContext:
-            runAsNonRoot: true
-            readOnlyRootFilesystem: true
+      - name: event-driven-repo-container
+        image: ghcr.io/writetojags/event-driven-repo:latest
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
       imagePullSecrets:
-        - name: ghcr-secret      
+      - name: ghcr-secret     
 
 ---
 
